@@ -1,4 +1,5 @@
 #!/usr/bin/env python2
+from time import sleep
 import numpy as np
 
 from math import e
@@ -26,11 +27,47 @@ def main():
     initial_theta = np.zeros((n + 1, 1))
     cost, grad = cost_function(initial_theta, X, y)
 
+    print 'Optimizing using gradient descent...\n'
+    alpha = 0.1
+    num_iters = 1000
+    theta = np.zeros((3, 1))
+    theta, J_history = gradient_descent_multi(X, y, theta, alpha, num_iters)
+
+    print 'Plotting convergence graph...\n'
+    pyplot.plot(range(1, num_iters + 1), J_history)
+    pyplot.xlabel('Number of iterations')
+    pyplot.ylabel('Cost J')
+    pyplot.show()
+
+    print 'Theta computed from gradient descent: \n'
+    print theta
+
+    print 'Prediction accuracy:\n'
+    prob = 1
+    student_score = np.array([[45, 85]])
+    student_score = student_score - mu
+    student_score = student_score / sigma
+    student_score = np.insert(student_score, 0, 1, axis=1)
+    prob = sigmoid(student_score.dot(theta))
+    print '  For a student with scores 45 and 85, we predict an admission probability of {0}'.format(prob)
+
+    print 'Computing accuracy:\n'
+    p = predict(theta, X)
+    accuracy = np.mean(p)
+    print 'Train Accuracy: {0}%'.format(accuracy * 100)
+
+
+def predict(theta, X):
+    h = sigmoid(X.dot(theta))
+    predicted = h >= 0.5
+    return predicted
+
+
 
 def feature_normalize(X):
-    mu = np.mean(X, axis=0)
-    sigma = np.std(X, axis=0)
-    X_norm = np.divide((X - mu), sigma)
+    mu = np.mean(X, axis=0).reshape((1, X.shape[1]))
+    sigma = np.std(X, axis=0).reshape((1, X.shape[1]))
+    X_norm = (X - mu) / sigma
 
     return X_norm, mu, sigma
 
@@ -39,23 +76,45 @@ def plot_data(X, y):
     pos = y == 1
     neg = y == 0
     pyplot.plot(X[:, (0, )][pos], X[:, (1, )][pos], 'b+', label='Admitted')
-    pyplot.plot(X[:, (0, )][neg], X[:, (1, )][neg], 'yo', label='Not admitted')
-
+    pyplot.plot(X[:, (0, )][neg], X[:, (1, )][neg], 'yo',
+        label='Not admitted')
     pyplot.xlabel('Exam 1 score')
     pyplot.ylabel('Exam 2 score')
     pyplot.legend(loc='upper right')
     pyplot.show()
+    pyplot.gcf().clear()
 
 
 def cost_function(theta, X, y):
+    h = sigmoid(X.dot(theta))
+
+    log_h = np.log(h)
+    one_minus_h = 1 - h
+    log_one_minus_h = np.log(one_minus_h)
+    vectorized_cost = y * log_h + (1 - y) * log_one_minus_h
     m = len(y)
+    J = np.sum(vectorized_cost) / -m
 
-    J = 0
     grad = np.zeros(theta.shape)
-    h = X.dot(theta)
-
+    error = h - y
+    grad = np.sum(error * X, axis=0)
+    grad = grad.reshape(theta.shape)
 
     return J, grad
+
+
+def gradient_descent_multi(X, y, theta, alpha, num_iters):
+    J_history = np.zeros((num_iters, 1))
+    for i in range(num_iters):
+        h = sigmoid(X.dot(theta))
+        error = h - y
+        gradient = np.sum(error * X, axis=0)
+        gradient = gradient.reshape(theta.shape)
+        delta = alpha * gradient
+        theta = theta - delta
+        J_history[i] = cost_function(theta, X, y)[0]
+
+    return theta, J_history
 
 
 def sigmoid(z):
