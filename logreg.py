@@ -1,9 +1,8 @@
 #!/usr/bin/env python2
-from time import sleep
 import numpy as np
 
 from math import e
-from matplotlib import pyplot
+from matplotlib import pyplot as plt
 
 
 def main():
@@ -26,6 +25,8 @@ def main():
     X = np.insert(X, 0, 1, axis=1)
     initial_theta = np.zeros((n + 1, 1))
     cost, grad = cost_function(initial_theta, X, y)
+    print 'Cost at initial theta (zeros):\n{0}'.format(cost)
+    print 'Gradient at initial theta (zeros):\n{0}'.format(grad)
 
     print 'Optimizing using gradient descent...\n'
     alpha = 0.1
@@ -34,10 +35,10 @@ def main():
     theta, J_history = gradient_descent_multi(X, y, theta, alpha, num_iters)
 
     print 'Plotting convergence graph...\n'
-    pyplot.plot(range(1, num_iters + 1), J_history)
-    pyplot.xlabel('Number of iterations')
-    pyplot.ylabel('Cost J')
-    pyplot.show()
+    plt.plot(range(1, num_iters + 1), J_history)
+    plt.xlabel('Number of iterations')
+    plt.ylabel('Cost J')
+    plt.show()
 
     print 'Theta computed from gradient descent: \n'
     print theta
@@ -53,7 +54,7 @@ def main():
 
     print 'Computing accuracy:\n'
     p = predict(theta, X)
-    accuracy = np.mean(p)
+    accuracy = np.mean(y == p)
     print 'Train Accuracy: {0}%'.format(accuracy * 100)
 
 
@@ -61,7 +62,6 @@ def predict(theta, X):
     h = sigmoid(X.dot(theta))
     predicted = h >= 0.5
     return predicted
-
 
 
 def feature_normalize(X):
@@ -75,14 +75,14 @@ def feature_normalize(X):
 def plot_data(X, y):
     pos = y == 1
     neg = y == 0
-    pyplot.plot(X[:, (0, )][pos], X[:, (1, )][pos], 'b+', label='Admitted')
-    pyplot.plot(X[:, (0, )][neg], X[:, (1, )][neg], 'yo',
+    plt.plot(X[:, (0, )][pos], X[:, (1, )][pos], 'b+', label='Admitted')
+    plt.plot(X[:, (0, )][neg], X[:, (1, )][neg], 'yo',
         label='Not admitted')
-    pyplot.xlabel('Exam 1 score')
-    pyplot.ylabel('Exam 2 score')
-    pyplot.legend(loc='upper right')
-    pyplot.show()
-    pyplot.gcf().clear()
+    plt.xlabel('Exam 1 score')
+    plt.ylabel('Exam 2 score')
+    plt.legend(loc='upper right')
+    plt.show()
+    plt.gcf().clear()
 
 
 def cost_function(theta, X, y):
@@ -91,14 +91,15 @@ def cost_function(theta, X, y):
     log_h = np.log(h)
     one_minus_h = 1 - h
     log_one_minus_h = np.log(one_minus_h)
-    vectorized_cost = y * log_h + (1 - y) * log_one_minus_h
+    vectorized_cost = -y * log_h - (1 - y) * log_one_minus_h
     m = len(y)
-    J = np.sum(vectorized_cost) / -m
+    J = np.sum(vectorized_cost) / m
 
     grad = np.zeros(theta.shape)
     error = h - y
     grad = np.sum(error * X, axis=0)
     grad = grad.reshape(theta.shape)
+    grad = grad / m
 
     return J, grad
 
@@ -106,13 +107,10 @@ def cost_function(theta, X, y):
 def gradient_descent_multi(X, y, theta, alpha, num_iters):
     J_history = np.zeros((num_iters, 1))
     for i in range(num_iters):
-        h = sigmoid(X.dot(theta))
-        error = h - y
-        gradient = np.sum(error * X, axis=0)
-        gradient = gradient.reshape(theta.shape)
-        delta = alpha * gradient
+        cost, grad = cost_function(theta, X, y)
+        delta = alpha * grad
         theta = theta - delta
-        J_history[i] = cost_function(theta, X, y)[0]
+        J_history[i] = cost
 
     return theta, J_history
 
