@@ -14,11 +14,11 @@ def main():
     for i in range(10):
         print '  {0}\t{1}'.format(X[i], y[i])
 
-    print 'Normalizing features...\n'
-    X, mu, sigma = feature_normalize(X)
-
     print 'Plotting data...\n'
     plot_data(X, y)
+
+    print 'Normalizing features...\n'
+    X, mu, sigma = feature_normalize(X)
 
     print 'Computing cost and gradient...\n'
     m, n = X.shape
@@ -44,13 +44,12 @@ def main():
     print theta
 
     print 'Prediction accuracy:\n'
-    prob = 1
     student_score = np.array([[45, 85]])
     student_score = student_score - mu
     student_score = student_score / sigma
     student_score = np.insert(student_score, 0, 1, axis=1)
     prob = sigmoid(student_score.dot(theta))
-    print '  For a student with scores 45 and 85, we predict an admission probability of {0}'.format(prob)
+    print '  For a student with scores 45 and 85, we predict an admission probability of {0}%'.format(prob[0, 0] * 100)
 
     print 'Computing accuracy:\n'
     p = predict(theta, X)
