@@ -96,8 +96,7 @@ def cost_function(theta, X, y):
 
     grad = np.zeros(theta.shape)
     error = h - y
-    grad = np.sum(error * X, axis=0)
-    grad = grad.reshape(theta.shape)
+    grad = X.T.dot(error)
     grad = grad / m
 
     return J, grad
